@@ -15,6 +15,7 @@
                     <span class="cart-item-price">$<%= p.productId.price * p.quantity %></span>
                     <form action="/cart-delete-item" method="POST" class="delete-form">
                         <input type="hidden" value="<%= p.productId._id %>" name="productId">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button class="btn btn-delete" type="submit">
                             Delete
                         </button>
@@ -26,6 +27,7 @@
             <h3>Total: $<%= products.reduce((total, p) => total + p.productId.price * p.quantity, 0) %></h3>
         </div>
         <form action="/create-order" method="POST" class="checkout-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button class="btn btn-checkout" type="submit">Order Now!</button>
         </form>
     <% } else { %>

@@ -1,3 +1,4 @@
+/* Thiết lập mặc định cho mọi form */
 .form-control {
     margin-bottom: 15px;
 }
@@ -9,12 +10,51 @@
 }
 
 .form-control input,
-.form-control textarea
-{
+.form-control textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
+}
+
+/* CSS riêng cho login-form */
+/* Căn chỉnh toàn màn hình cho .login-form */
+main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-form {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-form .btn {
+    background-color: #3b82f6;
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.login-form .btn:hover {
+    background-color: #2563eb;
+}
+
+/* CSS riêng cho product-form */
+.product-form .form-control input,
+.product-form .form-control textarea {
+    border-color: #666; /* Ví dụ về thay đổi màu viền */
 }
 
 .product-form button {

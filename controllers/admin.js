@@ -1,7 +1,9 @@
-
-const Product = require("../models/product");
+const Product = require('../models/product');
 
 exports.getAddProduct = (req, res, next) => {
+    if(!req.session.isLoggedIn) {
+        return res.redirect('/login');
+    }
     res.render('admin/edit-product', {
         pageTitle: 'Add Product',
         path: '/admin/add-product',
@@ -21,26 +23,27 @@ exports.postAddProduct = (req, res, next) => {
         imageUrl: imageUrl,
         userId: req.user
     });
-    product.save()
+    product
+        .save()
         .then(result => {
-            console.log("Created Product");
+            // console.log(result);
+            console.log('Created Product');
             res.redirect('/admin/products');
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+            console.log(err);
+        });
 };
-//
+
 exports.getEditProduct = (req, res, next) => {
-    const editMode = req.query.edit === 'true'; // Đảm bảo giá trị editMode là boolean
-    console.log('Edit Mode:', editMode); // Kiểm tra giá trị editMode
+    const editMode = req.query.edit;
     if (!editMode) {
         return res.redirect('/');
     }
     const prodId = req.params.productId;
-
     Product.findById(prodId)
         .then(product => {
             if (!product) {
-                console.log('Product not found');
                 return res.redirect('/');
             }
             res.render('admin/edit-product', {
@@ -62,49 +65,42 @@ exports.postEditProduct = (req, res, next) => {
 
     Product.findById(prodId)
         .then(product => {
+            if (product.userId.toString() !== req.user._id.toString()){
+                return res.redirect('/');
+            }
             product.title = updatedTitle;
             product.price = updatedPrice;
             product.description = updatedDesc;
             product.imageUrl = updatedImageUrl;
-            return product.save();
+            return product.save()
+                .then(result => {
+                    console.log('UPDATED PRODUCT!');
+                    res.redirect('/admin/products');
+                });
         })
-        .then(result => {
-            console.log('UPDATED PRODUCT!');
-            res.redirect('/admin/products');
-        })
-        .catch(err => {
-            console.log(err);
-            res.redirect('/admin/products');
-        });
+        .catch(err => console.log(err));
 };
 
-
 exports.getProducts = (req, res, next) => {
-    Product.find()
+    Product.find({userId: req.user._id})
         // .select('title price -_id')
         // .populate('userId', 'name')
-        .then(
-            products => {
-                console.log(products);
-                res.render('admin/products', {
-                    prods: products,
-                    pageTitle: 'Admin Products',
-                    path: '/admin/products'
-                });
-            }
-        ).catch(err => console.log(err));
+        .then(products => {
+            res.render('admin/products', {
+                prods: products,
+                pageTitle: 'Admin Products',
+                path: '/admin/products'
+            });
+        })
+        .catch(err => console.log(err));
 };
 
 exports.postDeleteProduct = (req, res, next) => {
-    const prodId = req.body.productId; // Lấy ID sản phẩm từ request body
-    Product.findByIdAndDelete(prodId) // Gọi phương thức xóa sản phẩm
+    const prodId = req.body.productId;
+    Product.deleteOne({_id: prodId, userId: req.user._id})
         .then(() => {
-            res.redirect('/admin/products'); // Chuyển hướng về trang danh sách sản phẩm sau khi xóa
+            console.log('DESTROYED PRODUCT');
+            res.redirect('/admin/products');
         })
-        .catch(err => {
-            console.log(err); // In ra lỗi nếu có
-            res.redirect('/admin/products'); // Chuyển hướng về trang danh sách sản phẩm trong trường hợp có lỗi
-        });
+        .catch(err => console.log(err));
 };
-
-

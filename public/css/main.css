@@ -20,9 +20,10 @@ main {
 
 .main-header__nav {
     height: 100%;
+    width: 100%;
     display: flex;
     align-items: center;
-    padding: 0 1.5rem;
+    justify-content: space-between;
 }
 
 .main-header__item-list {
@@ -46,4 +47,26 @@ main {
 .main-header__item a:active,
 .main-header__item a.active {
     color: #e73939;
+}
+
+/* Định dạng cho tiêu đề h1 */
+h1 {
+    font-size: 2em; /* Kích thước chữ lớn hơn */
+    color: #333; /* Màu chữ tối */
+    text-align: center; /* Canh giữa */
+    margin-bottom: 20px; /* Khoảng cách dưới tiêu đề */
+}
+
+/* Định dạng cho thông báo lỗi */
+.user-message {
+    padding: 10px 15px; /* Khoảng cách bên trong */
+    border-radius: 5px; /* Bo tròn các góc */
+    margin-bottom: 20px; /* Khoảng cách dưới thông báo */
+}
+
+/* Định dạng riêng cho thông báo lỗi */
+.user-message--error {
+    background-color: #f8d7da; /* Màu nền nhạt cho thông báo lỗi */
+    color: #721c24; /* Màu chữ cho thông báo lỗi */
+    border: 1px solid #f5c6cb; /* Đường viền cho thông báo lỗi */
 }

@@ -4,11 +4,11 @@ const Schema = mongoose.Schema;
 
 const OrderSchema = new Schema({
     products: [{
-        productData: { type: ObjectId, required: true },
+        product: { type: Object, required: true },
         quantity: { type: Number, required: true }
     }],
     user: {
-        name: {
+        email: {
             type: String,
             required: true
         },
