@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { validationResult } = require('express-validator');
 
 const sendMail = require('../utils/mailgunClient');
 
@@ -17,7 +18,9 @@ exports.getLogin = (req, res, next) => {
     res.render('auth/login', {
         path: '/login',
         pageTitle: 'Login',
-        errorMessage: message
+        errorMessage: message,
+        oldInputs: {email: "", password: ""},
+        validationErrors: [],
     });
 };
 
@@ -32,47 +35,61 @@ exports.getSignup = (req, res, next) => {
     res.render('auth/signup', {
         path: '/signup',
         pageTitle: 'Signup',
-        errorMessage: message
+        errorMessage: message,
+        oldInputs: {email: "", password: "", confirmPassword: "" },
+        validationErrors: []
     });
 };
 
 exports.postSignup = (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
-    const confirmPassword = req.body.confirmPassword;
+    const errors = validationResult(req);
 
-    User.findOne({ email: email })
-        .then((userDoc) => {
-            if (userDoc) {
-                req.flash('error', 'Email exists already');
-                return res.redirect('/signup'); // Dừng chuỗi nếu email đã tồn tại
-            }
-            return bcrypt.hash(password, 12)
-                .then((hashedPassword) => {
-                    const user = new User({
-                        email: email,
-                        password: hashedPassword,
-                        cart: { items: [] }
-                    });
-                    return user.save();
-                })
-                .then(() => {
-                    res.redirect('/login');
-                    // Gửi email xác nhận bằng Mailgun
-                    return sendMail(email, 'Hello', '', '<h1>Testing some Mailgun awesomeness!</h1>');
-                })
-                .catch((err) => {
-                    console.log(err);
-                });
+    if (!errors.isEmpty()){
+        console.log(errors.array());
+        return res.status(422).render('auth/signup', {
+            path: '/signup',
+            pageTitle: 'Signup',
+            errorMessage: errors.array()[0].msg,
+            oldInputs: {email: email, password: password, confirmPassword: req.body.confirmPassword },
+            validationErrors: errors.array()
+        });
+    }
+    bcrypt.hash(password, 12)
+        .then((hashedPassword) => {
+            const user = new User({
+                email: email,
+                password: hashedPassword,
+                cart: { items: [] }
+            });
+            return user.save();
+        })
+        .then(() => {
+            res.redirect('/login');
+            // Gửi email xác nhận bằng Mailgun
+            return sendMail(email, 'Hello', '', '<h1>Testing some Mailgun awesomeness!</h1>');
         })
         .catch((err) => {
             console.log(err);
-        });
+        })
 };
 
 exports.postLogin = (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
+    const errors = validationResult(req);
+    console.log(errors);
+
+    if (!errors.isEmpty()){
+        return res.status(422).render('auth/login', {
+            path: '/login',
+            pageTitle: 'Login',
+            errorMessage: errors.array()[0].msg,
+            oldInputs: {email: email, password: password},
+            validationErrors: errors.array(),
+        });
+    }
 
     User.findOne({ email: email })
         .then(user => {
@@ -80,7 +97,7 @@ exports.postLogin = (req, res, next) => {
                 req.flash('error', 'Invalid email');
                 return res.redirect('/login');
             }
-            return bcrypt.compare(password, user.password)
+            bcrypt.compare(password, user.password)
                 .then(doMath => {
                     if (doMath) {
                         req.session.isLoggedIn = true;

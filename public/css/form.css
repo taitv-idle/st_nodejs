@@ -69,3 +69,7 @@ main {
 .product-form button:hover {
     background-color: #555;
 }
+
+.form-control input.invalid{
+    border-color: red;
+}

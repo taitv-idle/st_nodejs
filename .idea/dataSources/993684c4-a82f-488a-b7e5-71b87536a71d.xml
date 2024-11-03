@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataSource name="@cluster0.maq21.mongodb.net">
+  <database-model serializer="dbm" dbms="MONGO" family-id="MONGO" format-version="4.53">
+    <root id="1">
+      <ServerVersion>7.0.15</ServerVersion>
+    </root>
+    <schema id="2" parent="1" name="admin"/>
+    <schema id="3" parent="1" name="local"/>
+    <schema id="4" parent="1" name="sample_mflix"/>
+    <schema id="5" parent="1" name="test">
+      <Current>1</Current>
+      <LastIntrospectionLocalTimestamp>2024-10-28.03:31:43</LastIntrospectionLocalTimestamp>
+    </schema>
+    <table id="6" parent="5" name="orders"/>
+    <table id="7" parent="5" name="products"/>
+    <table id="8" parent="5" name="users"/>
+    <column id="9" parent="6" name="_id">
+      <Position>1</Position>
+      <StoredType>ObjectId|12s</StoredType>
+    </column>
+    <column id="10" parent="6" name="items">
+      <Position>1</Position>
+      <StoredType>list|4999545s</StoredType>
+    </column>
+    <column id="11" parent="6" name="items.productId">
+      <Position>2</Position>
+      <StoredType>ObjectId|12s</StoredType>
+    </column>
+    <column id="12" parent="6" name="items.quantity">
+      <Position>3</Position>
+      <StoredType>Int32|4s</StoredType>
+    </column>
+    <column id="13" parent="7" name="_id">
+      <Position>1</Position>
+      <StoredType>ObjectId|12s</StoredType>
+    </column>
+    <column id="14" parent="7" name="description">
+      <Position>1</Position>
+      <StoredType>String|12s</StoredType>
+    </column>
+    <column id="15" parent="7" name="imageUrl">
+      <Position>1</Position>
+      <StoredType>String|12s</StoredType>
+    </column>
+    <column id="16" parent="7" name="price">
+      <Position>1</Position>
+      <StoredType>String|12s</StoredType>
+    </column>
+    <column id="17" parent="7" name="title">
+      <Position>2</Position>
+      <StoredType>String|12s</StoredType>
+    </column>
+    <column id="18" parent="7" name="userId">
+      <Position>3</Position>
+      <StoredType>ObjectId|12s</StoredType>
+    </column>
+    <column id="19" parent="8" name="_id">
+      <Position>1</Position>
+      <StoredType>ObjectId|12s</StoredType>
+    </column>
+    <column id="20" parent="8" name="email">
+      <Position>1</Position>
+      <StoredType>String|12s</StoredType>
+    </column>
+    <column id="21" parent="8" name="name">
+      <Position>1</Position>
+      <StoredType>String|12s</StoredType>
+    </column>
+    <column id="22" parent="8" name="cart">
+      <Position>2</Position>
+      <StoredType>Object|4999544s</StoredType>
+    </column>
+    <column id="23" parent="8" name="cart.items">
+      <Position>3</Position>
+      <StoredType>list|4999545s</StoredType>
+    </column>
+  </database-model>
+</dataSource>
