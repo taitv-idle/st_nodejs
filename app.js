@@ -7,6 +7,7 @@ const session = require('express-session');
 const MongoBbStore = require('connect-mongodb-session')(session);
 const csrf = require('csurf');
 const flash = require('connect-flash');
+const multer = require('multer');
 
 // Import controllers và models
 const errController = require('./controllers/errors');
@@ -23,6 +24,25 @@ const store = new MongoBbStore({
 });
 const csrfProtection = csrf();
 
+// Thiết lập nơi lưu trữ file
+const fileStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'images'); // Thư mục đích để lưu file
+    },
+    filename: (req, file, cb) => {
+        cb(null, new Date().toISOString().replace(/:/g, '-') + '-' + file.originalname); // Đặt tên file
+    }
+});
+
+// Bộ lọc loại file
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype === 'image/png' || file.mimetype === 'image/jpg' || file.mimetype === 'image/jpeg') {
+        cb(null, true); // Chấp nhận file
+    } else {
+        cb(null, false); // Từ chối file
+    }
+};
+
 // Thiết lập view engine và thư mục views
 app.set('view engine', 'ejs');
 app.set('views', 'views');
@@ -34,7 +54,9 @@ const authRoutes = require('./routes/auth');
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).single('image'));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.use(
     session({

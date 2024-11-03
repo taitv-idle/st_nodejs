@@ -1,3 +1,8 @@
+const fs = require('fs');
+const path = require('path');
+
+const PDFDocument = require('pdfkit');
+
 const Product = require('../models/product');
 const Order = require('../models/order');
 
@@ -168,5 +173,72 @@ exports.getOrders = (req, res, next) => {
             const error = new Error(err);
             error.httpStatusCode = 500;
             return next(error);
+        });
+};
+
+exports.getInvoice = (req, res, next) => {
+    const orderId = req.params.orderId;
+
+    // Tìm hóa đơn theo ID
+    Order.findById(orderId)
+        .then(order => {
+            if (!order) {
+                return next(new Error('No order found'));
+            }
+
+            // Kiểm tra quyền truy cập của người dùng
+            if (order.user.userId.toString() !== req.user._id.toString()) {
+                return next(new Error('Unauthorized'));
+            }
+
+            // Thiết lập đường dẫn và tên file hóa đơn
+            const invoiceName = `invoice-${orderId}.pdf`;
+            const invoicePath = path.join('data', 'invoices', invoiceName);
+
+            // Tạo tài liệu PDF
+            const pdfDoc = new PDFDocument();
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `inline; filename="${invoiceName}"`);
+
+            // Ghi vào tệp
+            const writeStream = fs.createWriteStream(invoicePath);
+            pdfDoc.pipe(writeStream); // Ghi vào file
+            pdfDoc.pipe(res); // Ghi vào response
+
+            // Tiêu đề hóa đơn
+            pdfDoc.fontSize(26).text('Invoice', { underline: true, align: 'center' }).moveDown(1);
+
+            // Thông tin người mua
+            pdfDoc.fontSize(12).text(`Order ID: ${orderId}`, { align: 'center' });
+            pdfDoc.text(`Date: ${new Date().toLocaleDateString()}`, { align: 'center' });
+            pdfDoc.text(`Customer: ${order.user.email}`, { align: 'center' }).moveDown(2);
+
+            // Thêm tiêu đề cho bảng
+            pdfDoc.fontSize(12).text('Item', { align: 'left', continued: true }).text('Quantity', { width: 90, align: 'center', continued: true })
+                .text('Price', { width: 90, align: 'right' }).moveDown();
+
+            // Thêm đường viền dưới tiêu đề
+            pdfDoc.moveTo(50, pdfDoc.y).lineTo(550, pdfDoc.y).stroke().moveDown(5);
+
+            let totalPrice = 0;
+            order.products.forEach((prod) => {
+                totalPrice += prod.quantity * prod.product.price;
+                pdfDoc.text(prod.product.title, { align: 'left', continued: true })
+                    .text(prod.quantity, { width: 90, align: 'center', continued: true })
+                    .text('$' + prod.product.price.toFixed(2), { width: 90, align: 'right' }).moveDown(2); // Tạo khoảng cách giữa các hàng
+            });
+
+            // Hiển thị tổng giá
+            pdfDoc.moveDown().fontSize(14).text('Total Price: $' + totalPrice.toFixed(2), { align: 'right' });
+
+            // Khi ghi tệp hoàn tất, gửi phản hồi
+            writeStream.on('finish', () => {
+                pdfDoc.end(); // Kết thúc tài liệu PDF
+            });
+
+            pdfDoc.end(); // Kết thúc tài liệu PDF
+        })
+        .catch(err => {
+            return next(err);
         });
 };

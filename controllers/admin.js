@@ -1,6 +1,8 @@
 const { validationResult } = require('express-validator');
 const Product = require('../models/product');
 const mongoose = require('mongoose');
+const fileHelper = require('../utils/file');
+
 // Kiểm tra quyền truy cập
 exports.getAddProduct = (req, res, next) => {
     if (!req.session.isLoggedIn) {
@@ -18,10 +20,27 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = (req, res, next) => {
     const title = req.body.title;
-    const imageUrl = req.body.imageUrl;
+    const image = req.file;
     const price = req.body.price;
     const description = req.body.description;
     const errors = validationResult(req);
+    if (!image){
+        return res.status(422).render('admin/edit-product', {
+            pageTitle: 'Add Product',
+            path: '/admin/add-product',
+            editing: false,
+            hasError: true,
+            product: {
+                title: title,
+                price: price,
+                description: description,
+            },
+            errorMessage: 'Attached file is not an image.',
+            validationErrors: []
+        })
+    }
+
+    const imageUrl = image.path;
 
     if (!errors.isEmpty()) {
         console.log(errors.array());
@@ -114,10 +133,11 @@ exports.postEditProduct = (req, res, next) => {
     const prodId = req.body.productId;
     const updatedTitle = req.body.title;
     const updatedPrice = req.body.price;
-    const updatedImageUrl = req.body.imageUrl;
+    const image = req.file;
     const updatedDesc = req.body.description;
     const errors = validationResult(req);
 
+    // Kiểm tra lỗi xác thực đầu vào
     if (!errors.isEmpty()) {
         return res.status(422).render('admin/edit-product', {
             pageTitle: 'Edit Product',
@@ -128,7 +148,6 @@ exports.postEditProduct = (req, res, next) => {
                 _id: prodId,
                 title: updatedTitle,
                 price: updatedPrice,
-                imageUrl: updatedImageUrl,
                 description: updatedDesc,
             },
             errorMessage: errors.array()[0].msg,
@@ -138,19 +157,30 @@ exports.postEditProduct = (req, res, next) => {
 
     Product.findById(prodId)
         .then(product => {
+            // Kiểm tra xem người dùng có quyền chỉnh sửa sản phẩm không
             if (product.userId.toString() !== req.user._id.toString()) {
                 return res.redirect('/');
             }
+
+            // Cập nhật thông tin sản phẩm
             product.title = updatedTitle;
             product.price = updatedPrice;
             product.description = updatedDesc;
-            product.imageUrl = updatedImageUrl;
+
+            // Kiểm tra và cập nhật hình ảnh mới (nếu có)
+            if (image) {
+                fileHelper.deleteFile(product.imageUrl); // Xóa ảnh cũ
+                product.imageUrl = image.path; // Cập nhật ảnh mới
+            }
+
+            // Lưu thay đổi vào cơ sở dữ liệu
             return product.save().then(() => {
                 console.log('UPDATED PRODUCT!');
                 res.redirect('/admin/products');
             });
         })
         .catch(err => {
+            // Xử lý lỗi và chuyển đến middleware lỗi
             const error = new Error(err);
             error.httpStatusCode = 500;
             return next(error);
@@ -178,12 +208,27 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
     const prodId = req.body.productId;
-    Product.deleteOne({_id: prodId, userId: req.user._id})
+
+    // Tìm kiếm sản phẩm bằng ID
+    Product.findById(prodId)
+        .then(product => {
+            // Kiểm tra xem sản phẩm có tồn tại không
+            if (!product) {
+                return next(new Error('Product not found'));
+            }
+
+            // Xóa tệp hình ảnh của sản phẩm
+            fileHelper.deleteFile(product.imageUrl);
+
+            // Xóa sản phẩm với điều kiện ID của người dùng khớp với người tạo sản phẩm
+            return Product.deleteOne({ _id: prodId, userId: req.user._id });
+        })
         .then(() => {
             console.log('DESTROYED PRODUCT');
             res.redirect('/admin/products');
         })
         .catch(err => {
+            // Tạo một đối tượng lỗi và gán mã trạng thái HTTP
             const error = new Error(err);
             error.httpStatusCode = 500;
             return next(error);

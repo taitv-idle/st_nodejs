@@ -8,7 +8,6 @@ const router = express.Router();
 // Đặt quy tắc kiểm tra trong một biến để tái sử dụng
 const productValidationRules = [
     body('title').isString().isLength({ min: 3 }).trim(),
-    body('imageUrl').isURL(),
     body('price').isFloat().trim(),
     body('description').isLength({ min: 5, max: 100 }).trim()
 ];

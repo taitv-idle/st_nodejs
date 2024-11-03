@@ -24,7 +24,7 @@
             <% }) %>
         </ul>
         <div class="cart-total">
-            <h3>Total: $<%= products.reduce((total, p) => total + p.productId.price * p.quantity, 0) %></h3>
+            <h3>Total: $<%= products.reduce((total, p) => total + p.productId.price * p.quantity, 2) %></h3>
         </div>
         <form action="/create-order" method="POST" class="checkout-form">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
