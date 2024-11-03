@@ -20,7 +20,7 @@ exports.getLogin = (req, res, next) => {
         pageTitle: 'Login',
         errorMessage: message,
         oldInputs: {email: "", password: ""},
-        validationErrors: [],
+        validationErrors: []
     });
 };
 
@@ -71,70 +71,79 @@ exports.postSignup = (req, res, next) => {
             return sendMail(email, 'Hello', '', '<h1>Testing some Mailgun awesomeness!</h1>');
         })
         .catch((err) => {
-            console.log(err);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         })
 };
 
-exports.postLogin = (req, res, next) => {
+exports.postLogin = async (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
-    const errors = validationResult(req);
-    console.log(errors);
 
-    if (!errors.isEmpty()){
+    // Kiểm tra lỗi đầu vào
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
         return res.status(422).render('auth/login', {
             path: '/login',
             pageTitle: 'Login',
             errorMessage: errors.array()[0].msg,
-            oldInputs: {email: email, password: password},
+            oldInputs: { email, password },
             validationErrors: errors.array(),
         });
     }
 
-    User.findOne({ email: email })
-        .then(user => {
-            if (!user) {
-                req.flash('error', 'Invalid email');
+    try {
+        // Kiểm tra xem người dùng có tồn tại hay không
+        const user = await User.findOne({ email });
+        if (!user) {
+            req.flash('error', 'Invalid email');
+            return res.redirect('/login');
+        }
+
+        // So sánh mật khẩu
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            req.flash('error', 'Invalid email or password.');
+            return res.redirect('/login');
+        }
+
+        // Đăng nhập thành công, lưu thông tin vào session
+        req.session.isLoggedIn = true;
+        req.session.user = user;
+
+        // Đảm bảo session được lưu trước khi gửi email và chuyển hướng
+        req.session.save(async (err) => {
+            if (err) {
+                console.log(err);
+                req.flash('error', 'Error saving session.');
                 return res.redirect('/login');
             }
-            bcrypt.compare(password, user.password)
-                .then(doMath => {
-                    if (doMath) {
-                        req.session.isLoggedIn = true;
-                        req.session.user = user;
 
-                        // Sử dụng callback cho req.session.save
-                        req.session.save((err) => {
-                            if (err) {
-                                console.log(err);
-                                req.flash('error', 'Error saving session.');
-                                return res.redirect('/login');
-                            }
+            // Gửi email xác nhận đăng nhập thành công, không chờ đợi
+            try {
+                await sendMail(
+                    email,
+                    'Login success',
+                    '',
+                    '<h1>Login successful!</h1>'
+                );
+                console.log('Email sent successfully');
+            } catch (mailErr) {
+                console.error('Failed to send email:', mailErr);
+                req.flash('error', 'Login successful, but failed to send email.');
+            }
 
-                            // Gửi email xác nhận
-                            sendMail(email, 'Login success','', '<h1>Testing some Mailgun awesomeness!</h1>')
-                                .then(result => {
-                                    console.log('Email sent:', result);
-                                    res.redirect('/'); // Chuyển hướng đến trang chính
-                                })
-                                .catch(mailErr => {
-                                    console.error('Failed to send email:', mailErr);
-                                    req.flash('error', 'Login successful, but failed to send email.');
-                                    res.redirect('/'); // Vẫn chuyển hướng ngay cả khi gửi email thất bại
-                                });
-                        });
-                    } else {
-                        req.flash('error', 'Invalid email or password.');
-                        return res.redirect('/login');
-                    }
-                });
-        })
-        .catch(err => {
-            console.error('Error during user lookup:', err);
-            req.flash('error', 'An error occurred. Please try again later.');
-            res.redirect('/login');
+            // Chuyển hướng đến trang chính
+            res.redirect('/');
         });
+    } catch (err) {
+        console.error('Error during login:', err);
+        req.flash('error', 'An error occurred. Please try again later.');
+        res.redirect('/login');
+    }
 };
+
 
 
 exports.postLogout = (req, res, next) => {
@@ -252,7 +261,11 @@ exports.postNewPassword = (req, res, next) =>{
             res.redirect('/login');
             return sendMail(resetUser.email, 'Reset Password Successfully!', 'Reset Password Successfully!', `Reset Password Successfully!`);
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
+        });
 
 }
 

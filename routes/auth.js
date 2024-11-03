@@ -10,11 +10,13 @@ router.post('/login',
     [
         body('email')
             .isEmail()
-            .withMessage('Please enter a valid email'),
+            .withMessage('Please enter a valid email')
+            .normalizeEmail(),
 
         body('password', 'Password has to be valid  ')
             .isLength({ min: 5 }) // Đảm bảo mật khẩu có ít nhất 5 ký tự
-            .isAlphanumeric()     // Đảm bảo chỉ chứa chữ và số, không có ký tự đặc biệt
+            .isAlphanumeric()    // Đảm bảo chỉ chứa chữ và số, không có ký tự đặc biệt
+            .trim()
     ],
     authController.postLogin
 );
@@ -26,6 +28,7 @@ router.post(
         check('email')
             .isEmail()
             .withMessage('Please enter a valid email')
+            .normalizeEmail()
             .custom((value) => {
                 // Kiểm tra xem email đã tồn tại trong hệ thống chưa
                 return User.findOne({ email: value }).then((userDoc) => {
@@ -36,10 +39,13 @@ router.post(
             }),
 
         body('password', 'Please enter a password with only numbers and text and at least 5 characters')
+            .trim()
             .isLength({ min: 5 }) // Kiểm tra độ dài tối thiểu của mật khẩu là 5 ký tự
-            .isAlphanumeric(),    // Đảm bảo mật khẩu chỉ chứa chữ và số (không có ký tự đặc biệt)
+            .isAlphanumeric(),// Đảm bảo mật khẩu chỉ chứa chữ và số (không có ký tự đặc biệt),
 
-        body('confirmPassword').custom((value, { req }) => {
+        body('confirmPassword')
+            .trim()
+            .custom((value, { req }) => {
             // Kiểm tra xem confirmPassword có khớp với password hay không
             if (value !== req.body.password) {
                 throw new Error('Passwords have to match!');

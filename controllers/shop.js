@@ -13,7 +13,9 @@ exports.getProducts = (req, res, next) => {
             });
         })
         .catch(err => {
-            console.log(err);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 
@@ -31,7 +33,11 @@ exports.getProduct = (req, res, next) => {
                 path: '/products'
             });
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
+        });
 };
 
 // Lấy trang chủ
@@ -45,7 +51,9 @@ exports.getIndex = (req, res, next) => {
             });
         })
         .catch(err => {
-            console.log(err);
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 };
 
@@ -64,7 +72,11 @@ exports.getCart = (req, res, next) => {
                 products: products
             });
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
+        });
 };
 
 // Thêm sản phẩm vào giỏ hàng
@@ -81,7 +93,11 @@ exports.postCart = (req, res, next) => {
             console.log(result);
             res.redirect('/cart');
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
+        });
 };
 
 // Xóa sản phẩm khỏi giỏ hàng
@@ -95,7 +111,11 @@ exports.postCartDeleteProduct = (req, res, next) => {
         .then(result => {
             res.redirect('/cart');
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
+        });
 };
 
 // Đặt hàng
@@ -124,7 +144,11 @@ exports.postOrder = (req, res, next) => {
         .then(() => {
             res.redirect('/orders');
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
+        });
 };
 
 // Lấy danh sách đơn hàng
@@ -140,5 +164,9 @@ exports.getOrders = (req, res, next) => {
                 orders: orders
             });
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+            const error = new Error(err);
+            error.httpStatusCode = 500;
+            return next(error);
+        });
 };
