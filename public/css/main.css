@@ -70,3 +70,24 @@ h1 {
     color: #721c24; /* Màu chữ cho thông báo lỗi */
     border: 1px solid #f5c6cb; /* Đường viền cho thông báo lỗi */
 }
+
+.pagination {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.pagination a {
+    text-decoration: none;
+    color: #28793f;
+    display: inline-block;
+    padding: 0.5rem;
+    border: 1px solid #28793f;
+    margin: 0 1rem;
+}
+
+.pagination a:hover,
+.pagination a:active,
+.pagination a.active {
+    background-color: #28793f;
+    color: white;
+}

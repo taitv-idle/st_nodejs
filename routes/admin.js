@@ -24,6 +24,6 @@ router.get('/edit-product/:productId', isAuth, adminController.getEditProduct);
 router.post('/edit-product', isAuth, productValidationRules, adminController.postEditProduct);
 
 // Route xóa sản phẩm
-router.post('/delete-product/:productId', isAuth, adminController.postDeleteProduct);
+router.delete('/product/:productId', isAuth, adminController.deleteProduct);
 
 module.exports = router;

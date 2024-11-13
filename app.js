@@ -8,13 +8,14 @@ const MongoBbStore = require('connect-mongodb-session')(session);
 const csrf = require('csurf');
 const flash = require('connect-flash');
 const multer = require('multer');
+require('dotenv').config(); // Thêm dòng này để sử dụng biến môi trường từ file .env
 
 // Import controllers và models
 const errController = require('./controllers/errors');
 const User = require('./models/user');
 
 // Khai báo URI của MongoDB
-const MONGODB_URI = 'mongodb+srv://tester:faaJ8OzQ29fMHAIz@cluster0.maq21.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 // Khởi tạo ứng dụng Express
 const app = express();
@@ -116,6 +117,7 @@ app.use((error, req, res, next) => {
         isAuthenticated: req.isLoggedIn
     });
 });
+
 
 // Kết nối đến cơ sở dữ liệu MongoDB và khởi động server
 mongoose.connect(MONGODB_URI)
