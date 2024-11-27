@@ -1,1 +1,6 @@
 .env
+node_modules
+server.cert
+server.key
+# Local Netlify folder
+.netlify
