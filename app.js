@@ -1,5 +1,8 @@
 // Import các module cần thiết
 const path = require('path');
+const fs = require('fs');
+const https = require('https');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -9,13 +12,17 @@ const csrf = require('csurf');
 const flash = require('connect-flash');
 const multer = require('multer');
 require('dotenv').config(); // Thêm dòng này để sử dụng biến môi trường từ file .env
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
 
 // Import controllers và models
 const errController = require('./controllers/errors');
 const User = require('./models/user');
 
+// console.log(process.env.NODE_ENV);
 // Khai báo URI của MongoDB
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASSWORD}@cluster0.maq21.mongodb.net/${process.env.MONGODB_DATABASE_NAME}?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Khởi tạo ứng dụng Express
 const app = express();
@@ -24,6 +31,9 @@ const store = new MongoBbStore({
     collection: 'sessions',
 });
 const csrfProtection = csrf();
+
+const privateKey = fs.readFileSync('server.key');
+const certificate = fs.readFileSync('server.cert');
 
 // Thiết lập nơi lưu trữ file
 const fileStorage = multer.diskStorage({
@@ -53,7 +63,12 @@ const adminRoutes  = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
 
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
 // Middleware
+app.use(helmet());
+app.use(compression());
+app.use(morgan('combined', { stream: accessLogStream }));
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).single('image'));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -122,7 +137,8 @@ app.use((error, req, res, next) => {
 // Kết nối đến cơ sở dữ liệu MongoDB và khởi động server
 mongoose.connect(MONGODB_URI)
     .then(result => {
-        app.listen(3000);
+        // https.createServer({key: privateKey, cert: certificate}, app).listen(process.env.PORT || 3000);
+        app.listen(process.env.PORT || 3000)
     })
     .catch(err => {
         console.log(err);
