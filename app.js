@@ -32,8 +32,8 @@ const store = new MongoBbStore({
 });
 const csrfProtection = csrf();
 
-const privateKey = fs.readFileSync('server.key');
-const certificate = fs.readFileSync('server.cert');
+// const privateKey = fs.readFileSync('server.key');
+// const certificate = fs.readFileSync('server.cert');
 
 // Thiết lập nơi lưu trữ file
 const fileStorage = multer.diskStorage({
@@ -66,7 +66,7 @@ const authRoutes = require('./routes/auth');
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
 // Middleware
 app.use(helmet());
-app.use(compression());
+// app.use(compression());
 app.use(morgan('combined', { stream: accessLogStream }));
 
 app.use(bodyParser.urlencoded({ extended: false }));
